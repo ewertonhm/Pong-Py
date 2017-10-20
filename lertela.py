@@ -3,6 +3,7 @@ import numpy as np
 import win32gui, win32ui, win32con, win32api
 
 def ler_tela(region=None):
+    # função utilizada para capturar uma região determinada da tela.
 
     hwin = win32gui.GetDesktopWindow()
 

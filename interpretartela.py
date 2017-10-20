@@ -53,8 +53,8 @@ def pegar_tela():
 	# Colocamos os valores finais em forma de soma (720+200) devido a facilidade de modificar o tamanho da região capturada 
 	# e seu offset, no caso a região de tamanho 720x405 com offset de 200 na horizontal e 200 na vertical será retornada. 
 	# A função cvtColor converte as cores da imagem capturada para escalas de cinza.
-    #screen = ler_tela(region=(200,200,480+200,270+200))
-    screen = ler_tela(region=(200,200,720+200,405+200))
+    screen = ler_tela(region=(200,200,480+200,270+200))
+    #screen = ler_tela(region=(200,200,720+200,405+200))
     #screen = ler_tela(region=(200,200,960+200,540+200))
     #print(screen.shape)
     #screen = cv2.resize(screen, (480,270))

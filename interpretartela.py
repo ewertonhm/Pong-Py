@@ -2,6 +2,49 @@ from lertela import ler_tela
 import cv2                      
 import numpy as np
 
+
+#--------------------------------------------------------------------------------------------
+
+def determina_local_objetos(img):
+	# Essa função recebe a imagem da tela do jogo em escalas de cinza e retorna 6 valores dentro de um vetor: 
+	# A posição horizontal e vertical da bola, a posição horizontal e vertical da primeira barra e a posição horizontal e 
+	# vertical da segunda barra (que controlamos).
+    try:
+        
+        #Get connected compontents in the image
+        n_elem, labels, stats, centroids = cv2.connectedComponentsWithStats(img, 8, cv2.CV_32S)
+
+        #Calculate features to determine which elements are ball and bars 
+        calc_features = list()    
+        for i, (x0,y0,width,height,area) in enumerate(stats):
+            #Calc ball feature
+            ball_feature = abs(width/height - 1 + area - width*height)
+            #Bar feature
+            bar_feature = abs(height/width - 4.6 + area - width*height)
+
+            calc_features.append((i, ball_feature, bar_feature))
+
+
+        #Sort values to get the most probable indexes of ball and bars
+        ball_ind = sorted(calc_features, key=lambda a: a[1])[0][0]
+        bars_ind = [bar_data[0] for bar_data in sorted(calc_features, key=lambda a: a[2])[0:2]]
+
+
+        #Get the centroids with the indexes
+        ball_center = centroids[ball_ind]
+        bars_center = centroids[bars_ind]
+
+        #Get left bar and right bar based on sorted value of the x position
+        sorted_bars = sorted(bars_center, key=lambda a: a[0])
+
+        left_bar_cent, right_bar_cent = sorted_bars[0], sorted_bars[1]
+
+        return np.array([ball_center, left_bar_cent, right_bar_cent]).reshape(-1)
+    
+    except:
+        return np.array([0,0,0,0,0,0])
+
+
 #--------------------------------------------------------------------------------------------
 
 def pegar_tela():
@@ -10,54 +53,19 @@ def pegar_tela():
 	# Colocamos os valores finais em forma de soma (720+200) devido a facilidade de modificar o tamanho da região capturada 
 	# e seu offset, no caso a região de tamanho 720x405 com offset de 200 na horizontal e 200 na vertical será retornada. 
 	# A função cvtColor converte as cores da imagem capturada para escalas de cinza.
-    
+    #screen = ler_tela(region=(200,200,480+200,270+200))
     screen = ler_tela(region=(200,200,720+200,405+200))
+    #screen = ler_tela(region=(200,200,960+200,540+200))
+    #print(screen.shape)
+    #screen = cv2.resize(screen, (480,270))
+
     screen = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
 
-return screen
+    return screen
 
 #--------------------------------------------------------------------------------------------
 
-def determina_local_objetos(img):
-	# Essa função recebe a imagem da tela do jogo em escalas de cinza e retorna 6 valores dentro de um vetor: 
-	# A posição horizontal e vertical da bola, a posição horizontal e vertical da primeira barra e a posição horizontal e 
-	# vertical da segunda barra (que controlamos).
-	
-    
-    try:
-        
-        #Verificar os componentes na imagem
-        n_elem, labels, stats, centroids = cv2.connectedComponentsWithStats(img, 8, cv2.CV_32S)
 
-        #Realiza os calculos para definir o que é a bola e o que é as barras
-        calc_features = list()    
-        for i, (x0,y0,width,height,area) in enumerate(stats):
-            #Determina Bola
-            ball_feature = abs(width/height - 1 + area - width*height)
-            #Determina Barras
-            bar_feature = abs(height/width - 4.6 + area - width*height)
-
-            calc_features.append((i, ball_feature, bar_feature))
-
-        #Testa valores aleatórios e pega os mais provaveis
-        ball_ind = sorted(calc_features, key=lambda a: a[1])[0][0]
-        bars_ind = [bar_data[0] for bar_data in sorted(calc_features, key=lambda a: a[2])[0:2]]
-
-        #Determina o centro dos objetos
-        ball_center = centroids[ball_ind]
-        bars_center = centroids[bars_ind]
-
-        #Define barra direita e esquerda a partir dos valores sorteados
-        sorted_bars = sorted(bars_center, key=lambda a: a[0])
-
-        left_bar_cent, right_bar_cent = sorted_bars[0], sorted_bars[1]
-
-        return np.array([ball_center, left_bar_cent, right_bar_cent]).reshape(-1)
-    
-    except:
-return np.array([0,0,0,0,0,0])
-
-#--------------------------------------------------------------------------------------------
 
 def definir_objetos_tela():
     # Aqui combinamos as funções pegar_tela e determina_local_objetos 
@@ -90,7 +98,7 @@ if __name__ == "__main__":
 
     while True:
 
-        screen, obj_locations = get_screen_features()
+        screen, obj_locations = determina_local_objetos()
 
         cv2.imshow("Pong-Py", screen)
     
